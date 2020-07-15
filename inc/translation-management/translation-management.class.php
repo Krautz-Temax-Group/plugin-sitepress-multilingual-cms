@@ -1234,6 +1234,18 @@ class TranslationManagement {
 				continue;
 			}
 
+			if ( $post instanceof \WP_Post ) {
+				/**
+				 * Registers strings coming from page builder shortcodes
+				 *
+				 * @param  \WP_Post
+				 *
+				 * @since 4.3.16
+				 *
+				 */
+				do_action( 'wpml_pb_register_all_strings_for_translation', $post );
+			}
+
 			$element_type        = $type . '_' . $post->post_type;
 			$post_trid           = $sitepress->get_element_trid( $element->get_element_id(), $element_type );
 			$post_translations   = $sitepress->get_element_translations( $post_trid, $element_type );

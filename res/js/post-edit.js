@@ -329,7 +329,7 @@ function setupCopyButtons() {
 			type: "POST", url: icl_ajx_url,
 			data: "icl_ajx_action=reset_duplication&post_id=" + jQuery('#post_ID').val() + '&_icl_nonce=' + jQuery('#_icl_nonce_rd').val(),
 			success: function (msg) {
-				location.reload()
+				location.reload(true);
 			}
 		});
 	});

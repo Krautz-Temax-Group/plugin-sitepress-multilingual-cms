@@ -2,6 +2,9 @@
 
 ## Table of Contents
 
+* [Languages](#languages)
+    * [getActive](#getactive)
+    * [getFlagUrl](#getflagurl)
 * [PostTranslations](#posttranslations)
     * [setAsSource](#setassource)
     * [setAsTranslationOf](#setastranslationof)
@@ -14,6 +17,70 @@
     * [get](#get-1)
     * [getIfOriginal](#getiforiginal-1)
     * [isOriginal](#isoriginal)
+
+## Languages
+
+
+
+
+
+* Full name: \WPML\Element\API\Languages
+
+
+### getActive
+
+
+
+```php
+Languages::getActive(  ): array
+```
+
+It returns an array of the active languages.
+
+The returned array is indexed by language code and every element has the following structure:
+```
+ 'fr' => [
+     'code'           => 'fr',
+     'id'             => 3,
+     'english_name'   => 'French',
+     'native_name'    => 'Français',
+     'major'          => 1,
+     'default_locale' => 'fr_FR',
+     'encode_url'     => 0,
+     'tag'            => 'fr ,
+     'display_name'   => 'French
+ ]
+```
+
+* This method is **static**.
+
+
+
+---
+
+### getFlagUrl
+
+
+
+```php
+Languages::getFlagUrl( mixed $...$code ): callable|string
+```
+
+- Curried :: string → string
+
+Gets the flag url for the given language code.
+
+* This method is **static**.
+**Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `$...$code` | **mixed** |  |
+
+
+
+
+---
 
 ## PostTranslations
 
@@ -132,7 +199,7 @@ Class Translations
 Translations::setLanguage( mixed $...$el_id, mixed $...$el_type, mixed $...$trid, mixed $...$language_code, mixed $...$src_language_code, mixed $...$check_duplicates ): callable|integer
 ```
 
-- Curried
+- Curried :: int → string → int|null → string → string → string|null → bool → bool|int|null|string
 
          Wrapper function for SitePress::set_element_language_details
 
@@ -283,4 +350,4 @@ Translations::isOriginal( mixed $...$el_id, mixed $...$translations ): callable|
 
 
 --------
-> This document was automatically generated from source code comments on 2020-05-19 using [phpDocumentor](http://www.phpdoc.org/) and [cvuorinen/phpdoc-markdown-public](https://github.com/cvuorinen/phpdoc-markdown-public)
+> This document was automatically generated from source code comments on 2020-05-26 using [phpDocumentor](http://www.phpdoc.org/) and [cvuorinen/phpdoc-markdown-public](https://github.com/cvuorinen/phpdoc-markdown-public)

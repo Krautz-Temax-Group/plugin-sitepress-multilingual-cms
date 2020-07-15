@@ -200,7 +200,15 @@ class WPML_Languages extends WPML_SP_And_PT_User {
 			$override     = ! $this->sitepress->is_translated_post_type( $post_type );
 			$mark_missing = true;
 			if ( ! $override && $this->query_utils->archive_query_has_posts( $lang_code, $fallback_lang, null, null, null, $post_type ) ) {
-				$url                    = $this->sitepress->convert_url( $this->sitepress->get_wp_api()->get_post_type_archive_link( $post_type ), $lang_code );
+				$getArchiveLinkWithLanguage = function( $post_type, $lang_code ) {
+					$current_language = $this->sitepress->get_current_language();
+					$this->sitepress->switch_lang( $lang_code );
+					$url = $this->sitepress->convert_url( $this->sitepress->get_wp_api()->get_post_type_archive_link( $post_type ), $lang_code );
+					$this->sitepress->switch_lang( $current_language );
+
+					return $url;
+				};
+				$url                    = $getArchiveLinkWithLanguage( $post_type, $lang_code );
 				$lang['translated_url'] = $this->sitepress->adjust_cpt_in_url( $url, $post_type, $lang_code );
 				$mark_missing           = false;
 			}

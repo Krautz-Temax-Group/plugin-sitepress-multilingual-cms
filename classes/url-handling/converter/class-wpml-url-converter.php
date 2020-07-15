@@ -102,6 +102,10 @@ class WPML_URL_Converter {
 		$this->slash_helper = $slash_helper;
 	}
 
+	public function get_default_site_url() {
+		return $this->get_url_helper()->get_unfiltered_home_option();
+	}
+
 	/**
 	 * Scope of this function:
 	 * 1. Convert the home URL in the specified language depending on language negotiation:

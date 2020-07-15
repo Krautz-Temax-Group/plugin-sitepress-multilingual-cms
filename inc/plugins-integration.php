@@ -131,6 +131,7 @@ function wpml_themes_integration_setup() {
 		$actions[] = WPML\Compatibility\Divi\Search::class;
 		$actions[] = WPML\Compatibility\Divi\DiviOptionsEncoding::class;
 		$actions[] = WPML\Compatibility\Divi\ThemeBuilderFactory::class;
+		$actions[] = WPML\Compatibility\Divi\Builder::class;
 	}
 
 	if ( defined( 'FUSION_BUILDER_VERSION' ) ) {

@@ -860,7 +860,49 @@ class WPML_Elementor_Translatable_Nodes implements IWPML_Page_Builders_Translata
 				'integration-class' => [
 					'\WPML\PB\Elementor\Modules\MediaCarousel',
 				]
-			]
+			],
+			'lottie'     => [
+				'conditions' => [ self::TYPE => 'lottie' ],
+				'fields'     => [
+					'custom_link' => [
+						'field'       => 'url',
+						'type'        => __( 'Lottie: Link URL', 'sitepress' ),
+						'editor_type' => 'LINK'
+					],
+				],
+			],
+			'author-box'           => array(
+				'conditions' => array( self::TYPE => 'author-box' ),
+				'fields'     => array(
+					array(
+						'field'       => 'author_name',
+						'type'        => __( 'Author Name', 'sitepress' ),
+						'editor_type' => 'LINE',
+					),
+					array(
+						'field'       => 'author_bio',
+						'type'        => __( 'Author Bio', 'sitepress' ),
+						'editor_type' => 'AREA',
+					),
+					'author_website' => array(
+						'field'       => 'url',
+						'field_id'    => 'author_website',
+						'type'        => __( 'Author Link', 'sitepress' ),
+						'editor_type' => 'LINK',
+					),
+					array(
+						'field'       => 'link_text',
+						'type'        => __( 'Archive Text', 'sitepress' ),
+						'editor_type' => 'LINE',
+					),
+					'posts_url'      => array(
+						'field'       => 'url',
+						'field_id'    => 'posts_url',
+						'type'        => __( 'Archive Button URL', 'sitepress' ),
+						'editor_type' => 'LINK',
+					),
+				),
+			),
 		);
 	}
 
