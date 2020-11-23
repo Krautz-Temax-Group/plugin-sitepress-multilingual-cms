@@ -84,4 +84,8 @@ class ApiConnection {
 			],
 		] );
 	}
+
+	public static function dismissions( array $initialDismissions ) {
+		return $initialDismissions;
+	}
 }

@@ -251,10 +251,10 @@ class WPML_LS_Templates {
 		} elseif ( strpos( $path, $this->wpml_file->fix_dir_separator( $this->get_uploads_path() ) ) === 0 ) {
 			$name = __( 'Uploads', 'sitepress' ) . ' - ' . $name;
 		} elseif (
-			strpos( $path, $this->wpml_file->fix_dir_separator( WP_PLUGIN_DIR ) ) === 0
+			strpos( $path, $this->wpml_file->fix_dir_separator( WPML_PLUGINS_DIR ) ) === 0
 			&& ! $this->is_core_template( $path )
 		) {
-			$plugin_dir = $this->wpml_file->fix_dir_separator( WP_PLUGIN_DIR );
+			$plugin_dir = $this->wpml_file->fix_dir_separator( WPML_PLUGINS_DIR );
 			$plugin_dir = preg_replace( '#' . preg_quote( $plugin_dir ) . '#' , '', $path, 1 );
 			$plugin_dir = ltrim( $plugin_dir, $this->ds );
 			$plugin_dir = explode( $this->ds, $plugin_dir );

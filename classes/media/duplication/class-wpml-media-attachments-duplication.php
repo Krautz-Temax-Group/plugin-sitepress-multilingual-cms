@@ -1,5 +1,8 @@
 <?php
 
+use \WPML\FP\Relation;
+use \WPML\FP\Obj;
+
 class WPML_Media_Attachments_Duplication {
 
 	/** @var  WPML_Model_Attachments */
@@ -321,7 +324,7 @@ class WPML_Media_Attachments_Duplication {
 					if ( $translated_attachment_id ) {
 						//Set the parent post, if not already set
 						$translated_attachment = get_post( $translated_attachment_id );
-						if ( ! $translated_attachment->post_parent ) {
+						if ( $translated_attachment && ! $translated_attachment->post_parent ) {
 							$prepared_query = $this->wpdb->prepare( "UPDATE {$this->wpdb->posts} SET post_parent=%d WHERE ID=%d", array(
 								$target_post_id,
 								$translated_attachment_id
@@ -915,6 +918,7 @@ class WPML_Media_Attachments_Duplication {
 		if ( $response['left'] ) {
 			$response['message'] = sprintf( __( 'Duplicating featured images. %d left', 'sitepress' ), $response['left'] );
 		} else {
+			$this->set_media_duplication_meta_for_existing_posts( '_wpml_media_featured' );
 			$response['message'] = sprintf( __( 'Duplicating featured images: done!', 'sitepress' ), $response['left'] );
 		}
 
@@ -948,6 +952,7 @@ class WPML_Media_Attachments_Duplication {
 		if ( $response['left'] ) {
 			$response['message'] = sprintf( __( 'Duplicating media. %d left', 'sitepress' ), $response['left'] );
 		} else {
+			$this->set_media_duplication_meta_for_existing_posts( '_wpml_media_duplicate' );
 			$response['message'] = sprintf( __( 'Duplicating media: done!', 'sitepress' ), $response['left'] );
 		}
 
@@ -1038,6 +1043,8 @@ class WPML_Media_Attachments_Duplication {
 		$response = array();
 		$this->wpdb->delete( $this->wpdb->postmeta, array( 'meta_key' => 'wpml_media_processed' ) );
 
+		$this->add_missing_media_duplication_meta_values( '_wpml_media_featured' );
+		$this->add_missing_media_duplication_meta_values( '_wpml_media_duplicate' );
 		$response['message'] = __( 'Started...', 'sitepress' );
 
 		echo wp_json_encode( $response );
@@ -1180,4 +1187,27 @@ class WPML_Media_Attachments_Duplication {
 		wp_send_json_success( $response );
 	}
 
+	private function set_media_duplication_meta_for_existing_posts( $meta_key ) {
+		$this->wpdb->update(
+			$this->wpdb->postmeta,
+			[ 'meta_value' => 1 ],
+			[ 'meta_key' => $meta_key, 'meta_value' => 0 ]
+		);
+	}
+
+	private function add_missing_media_duplication_meta_values( $meta_key ) {
+		$excluded_post_types = [ 'attachment', 'wp_block' ];
+		$post_types          = wpml_collect( $this->sitepress->get_translatable_documents() )
+			->union( $this->sitepress->get_display_as_translated_documents() )
+			->map( Obj::prop( 'name' ) )
+			->diff( $excluded_post_types )
+			->toArray();
+
+		if ( $post_types ) {
+			$this->wpdb->query( "INSERT INTO {$this->wpdb->postmeta} (post_id, meta_key, meta_value)
+				SELECT ID, '{$meta_key}', '0' FROM {$this->wpdb->posts} 
+				LEFT JOIN {$this->wpdb->postmeta} on ID = post_id AND meta_key = '{$meta_key}'
+				WHERE post_id IS NULL AND post_status='publish' AND post_type IN ('" . join( "','", $post_types ) . "')" );
+		}
+	}
 }

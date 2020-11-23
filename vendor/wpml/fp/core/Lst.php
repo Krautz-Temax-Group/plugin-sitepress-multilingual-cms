@@ -37,7 +37,7 @@ use WPML\Collect\Support\Arr;
  * @method static callable|array make ( ...$a ) - Curried :: mixed → array
  * @method static callable|array insert( ...$index, ...$v, ...$array ) - Curried :: int → mixed → array → array
  * @method static callable|array range( ...$from, ...$to )  - Curried :: int → int → array
- * @method static callable|array xprod(...$a, ...$b) - Curried :: [a] -> [b] -> [a, b]
+ * @method static callable|array xprod( ...$a, ...$b ) - Curried :: [a]->[b]->[a, b]
  *
  * Creates a new list out of the two supplied by creating each possible pair from the lists.
  *
@@ -52,11 +52,22 @@ use WPML\Collect\Support\Arr;
  *
  * $this->assertEquals( $expectedResult, Lst::xprod( $a, $b ) );
  * ```
+ * @method static callable|array prepend( ...$val, ...$array ) - Curried:: a → [a] → [a]
+ *
+ * Returns a new array with the given element at the front, followed by the contents of the list.
+ *
+ * @method static callable|array reverse( ...$array ) - Curried:: [a] → [a]
+ *
+ * Returns a new array with the elements reversed.
+ *
  */
 class Lst {
 
 	use Macroable;
 
+	/**
+	 * @return void
+	 */
 	public static function init() {
 
 		self::macro( 'append', curryN( 2, function ( $newItem, array $data ) {
@@ -219,8 +230,44 @@ class Lst {
 
 			return $result;
 		} ) );
+
+		self::macro( 'prepend', Lst::insert( 0 ) );
+
+		self::macro( 'reverse', curryN( 1, 'array_reverse' ) );
 	}
 
+	/**
+	 * Curried function that keys the array by the given key
+	 *
+	 * keyBy :: string -> array -> array
+	 *
+	 * ```
+	 * $data = [
+	 *    [ 'x' => 'a', 'y' => 123 ],
+	 *    [ 'x' => 'b', 'y' => 456 ],
+	 * ];
+	 *
+	 * Lst::keyBy( 'x', $data );
+	 * [
+	 *    'a' => [ 'x' => 'a', 'y' => 123 ],
+	 *    'b' => [ 'x' => 'b', 'y' => 456 ],
+	 * ],
+	 * ```
+	 *
+	 * @param string $key
+	 * @param mixed[]  $array
+	 *
+	 * @return mixed[]|callable
+	 */
+	public static function keyBy( $key = null, $array = null ) {
+		$keyBy = function ( $key, $array ) {
+			$apply = Fns::converge( Lst::zipObj(), [ Lst::pluck( $key ), Fns::identity() ] );
+
+			return $apply( $array );
+		};
+
+		return call_user_func_array( curryN( 2, $keyBy ), func_get_args() );
+	}
 
 }
 

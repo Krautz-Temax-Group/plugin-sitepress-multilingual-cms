@@ -161,11 +161,14 @@ class WPML_Display_As_Translated_Tax_Query implements IWPML_Action {
 		$queriedObject = $q->get_queried_object();
 		$taxonomy      = isset( $queriedObject->taxonomy ) ? $queriedObject->taxonomy : null;
 
-		$mergeChildren = $taxonomy ?
-			function ( $term ) use ( $taxonomy ) {
+		if ( $taxonomy && $this->include_term_children( $q ) ) {
+			$mergeChildren = function ( $term ) use ( $taxonomy, $q ) {
 				return [ $term, get_term_children( $term, $taxonomy ) ];
-			} :
-			function ( $term ) { return $term; };
+			};
+		} else {
+			$mergeChildren = \WPML\FP\Fns::identity();
+		}
+
 
 		return wpml_collect( explode( ',', $terms_string ) )
 			->map( $mergeFallbackTerms )
@@ -174,5 +177,9 @@ class WPML_Display_As_Translated_Tax_Query implements IWPML_Action {
 			->flatten()
 			->unique()
 			->implode( ',' );
+	}
+
+	private function include_term_children( WP_Query $q ) {
+		return (bool) \WPML\FP\Obj::path( [ 'tax_query', 'queries', 0, 'include_children' ], $q );
 	}
 }

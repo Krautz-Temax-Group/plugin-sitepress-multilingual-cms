@@ -2,10 +2,10 @@
 /**
  * Plugin Name: WPML Multilingual CMS
  * Plugin URI: https://wpml.org/
- * Description: WPML Multilingual CMS | <a href="https://wpml.org">Documentation</a> | <a href="https://wpml.org/version/wpml-4-3-16/">WPML 4.3.16 release notes</a>
+ * Description: WPML Multilingual CMS | <a href="https://wpml.org">Documentation</a> | <a href="https://wpml.org/version/wpml-4-4-5/">WPML 4.4.5 release notes</a>
  * Author: OnTheGoSystems
  * Author URI: http://www.onthegosystems.com/
- * Version: 4.3.16
+ * Version: 4.4.5
  * Plugin Slug: sitepress-multilingual-cms
  *
  * @package WPML\Core
@@ -27,14 +27,15 @@ if ( ! \WPML\Requirements\WordPress::checkMinimumRequiredVersion() ) {
 	return;
 }
 
-define( 'ICL_SITEPRESS_VERSION', '4.3.16' );
+define( 'ICL_SITEPRESS_VERSION', '4.4.5' );
 
 // Do not uncomment the following line!
 // If you need to use this constant, use it in the wp-config.php file
 //define('ICL_SITEPRESS_DEV_VERSION', '3.4-dev');
 define( 'WPML_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
 define( 'WPML_PLUGIN_FOLDER', dirname( WPML_PLUGIN_BASENAME ) );
-define( 'WPML_PLUGIN_PATH', WP_PLUGIN_DIR . '/' . WPML_PLUGIN_FOLDER );
+define( 'WPML_PLUGIN_PATH', dirname(__FILE__) );
+define( 'WPML_PLUGINS_DIR', realpath( dirname( __FILE__ ) . '/..' ) );
 define( 'WPML_PLUGIN_FILE', basename( WPML_PLUGIN_BASENAME ) );
 
 /** @deprecated since 3.7.0 and will be removed in 3.8.0, use `WPML_PLUGIN_BASENAME` instead */
@@ -213,6 +214,11 @@ if ( $sitepress->is_setup_complete() ) {
 		'\WPML\WP\OptionManager',
 		'\WPML\Notices\DismissNotices',
 		'\WPML\Ajax\Locale',
+		'\WPML\Ajax\Factory',
+		\WPML\PostTranslation\SpecialPage\Hooks::class,
+		\WPML\LanguageSwitcher\AjaxNavigation\Hooks::class,
+		\WPML\BrowserLanguageRedirect\Dialog::class,
+		\WPML\UrlHandling\WPLoginUrlConverterFactory::class
 	];
 	$action_filter_loader->load( $actions );
 
@@ -402,3 +408,6 @@ $wpml_whip_requirements = new WPML_Whip_Requirements();
 $wpml_whip_requirements->add_hooks();
 
 add_action( 'activated_plugin', [ 'WPML\Plugins', 'loadCoreFirst' ] );
+if ( defined( 'WCML_VERSION') ) {
+	WPML\Plugins::loadCoreFirst();
+}
