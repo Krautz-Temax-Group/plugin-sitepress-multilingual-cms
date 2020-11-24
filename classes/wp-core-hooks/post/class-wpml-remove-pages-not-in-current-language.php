@@ -7,6 +7,7 @@ class WPML_Remove_Pages_Not_In_Current_Language extends WPML_WPDB_And_SP_User {
 	/**
 	 * @param array $arr Array of posts to filter
 	 * @param array $get_page_arguments Arguments passed to the `get_pages` function
+	 * @param \WP_Post[]|array[]|int[] $arr Array of posts or post IDs to filter (post IDs are required in tests but it might not be a real case)
 	 *
 	 * @return array
 	 */
@@ -15,7 +16,7 @@ class WPML_Remove_Pages_Not_In_Current_Language extends WPML_WPDB_And_SP_User {
 		$current_language = $this->sitepress->get_current_language();
 
 		if ( 'all' !== $current_language && 0 !== count( $new_arr ) ) {
-			$cache_key = md5( serialize( $new_arr ) );
+			$cache_key = $this->get_cache_key( $new_arr );
 			if ( $this->is_cached( $cache_key ) ) {
 				$new_arr = $this->posts_from_ids[ $current_language ][ $cache_key ];
 			} else {
@@ -46,6 +47,28 @@ class WPML_Remove_Pages_Not_In_Current_Language extends WPML_WPDB_And_SP_User {
 		return $new_arr;
 	}
 
+	/**
+	 * @param WP_Post[]|array[]|int[]
+	 *
+	 * @return string
+	 */
+	private function get_cache_key( $new_arr ) {
+		$item_sample = reset( $new_arr );
+
+		$get_entity_hash = function ( $new_arr ) {
+			return md5( implode( ',', wp_list_pluck( $new_arr, 'ID' ) ) );
+		};
+
+		if ( is_object( $item_sample ) ) {
+			$cache_key = 'objects-' . $get_entity_hash( $new_arr );
+		} elseif ( is_array( $item_sample ) ) {
+			$cache_key = 'array-' . $get_entity_hash( $new_arr );
+		} else {
+			$cache_key = 'ids-' . md5( implode( ',', $new_arr ) );
+		}
+
+		return $cache_key;
+	}
 
 	/**
 	 * @param $post_type

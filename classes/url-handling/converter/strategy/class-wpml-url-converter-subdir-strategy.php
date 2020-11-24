@@ -37,6 +37,26 @@ class WPML_URL_Converter_Subdir_Strategy extends WPML_URL_Converter_Abstract_Str
 		$this->language_codes_map = apply_filters( 'wpml_language_codes_map', $this->language_codes_map );
 
 		$this->language_codes_reverse_map = array_flip( $this->language_codes_map );
+
+		$this->add_hooks();
+	}
+
+	public function add_hooks() {
+		add_filter( 'rest_url', [ $this, 'convertRestUrl' ] );
+	}
+
+	/**
+	 * @param string $url
+	 *
+	 * @return string
+	 */
+	public function convertRestUrl( $url ) {
+		/** @var SitePress */
+		global $sitepress;
+
+		$matchTrailingSlash = $url[ strlen( $url ) - 1 ] === '/' ? 'trailingslashit' : 'untrailingslashit';
+
+		return $matchTrailingSlash( $this->convert_url_string( $url, $sitepress->get_current_language() ) );
 	}
 
 	public function get_lang_from_url_string( $url ) {
@@ -113,6 +133,10 @@ class WPML_URL_Converter_Subdir_Strategy extends WPML_URL_Converter_Abstract_Str
 		} else {
 			return $url;
 		}
+	}
+
+	public function use_wp_login_url_converter() {
+		return true;
 	}
 
 	/**

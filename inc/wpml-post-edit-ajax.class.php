@@ -25,8 +25,11 @@ class WPML_Post_Edit_Ajax {
 		$slug        = filter_var( $_POST['slug'], FILTER_SANITIZE_STRING );
 		$name        = filter_var( $_POST['name'], FILTER_SANITIZE_STRING );
 		$trid        = filter_var( $_POST['trid'], FILTER_SANITIZE_NUMBER_INT );
-		$description = filter_var( $_POST['description'], FILTER_SANITIZE_STRING );
+		$description = wp_kses_post( $_POST['description'] );
 		$meta_data   = isset( $_POST['meta_data'] ) ? $_POST['meta_data'] : array();
+
+		remove_filter( 'pre_term_description', 'wp_filter_kses' );
+		remove_filter( 'term_description', 'wp_kses_data' );
 
 		$new_term_object = self::save_term_ajax( $sitepress, $lang, $taxonomy, $slug, $name, $trid, $description, $meta_data );
 		$sitepress->get_wp_api()->wp_send_json_success( $new_term_object );
@@ -109,7 +112,7 @@ class WPML_Post_Edit_Ajax {
 					} elseif ( $editor_key === 'excerpt' ) {
 						$editor_var = $excerpt_type;
 					}
-					
+
 					if ( function_exists( 'format_for_editor' ) ) {
 						// WordPress 4.3 uses format_for_editor
 						$html_pre = $post->$editor_field;

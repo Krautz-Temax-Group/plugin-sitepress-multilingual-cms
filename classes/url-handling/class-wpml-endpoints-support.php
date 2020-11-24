@@ -92,7 +92,7 @@ class WPML_Endpoints_Support {
 		$endpoint_translation = apply_filters( 'wpml_translate_single_string', $endpoint, self::STRING_CONTEXT, $key, $language ? $language : $this->current_language );
 
 		if ( ! empty( $endpoint_translation ) ) {
-			return $endpoint_translation;
+			return urlencode( $endpoint_translation );
 		} else {
 			return $endpoint;
 		}
@@ -135,7 +135,7 @@ class WPML_Endpoints_Support {
 					$buff_value = array();
 
 					foreach ( $value as $k => $v ) {
-						$k                = preg_replace( '/(\/)?' . $endpoint_value . '(\/)?(\(\/\(\.\*\)\)\?\/\?\$)/', '$1' . $endpoint_translation . '$2$3', $k );
+						$k                = preg_replace( '/(\/|^)' . $endpoint_value . '(\/)?(\(\/\(\.\*\)\)\?\/\?\$)/', '$1' . $endpoint_translation . '$2$3', $k );
 						$buff_value[ $k ] = $v;
 					}
 					$value = $buff_value;

@@ -126,7 +126,7 @@ class WPML_Config {
                         continue;
                     }
 					$plugin_slug = dirname( $p );
-					$config_file = WP_PLUGIN_DIR . '/' . $plugin_slug . '/wpml-config.xml';
+					$config_file = WPML_PLUGINS_DIR . '/' . $plugin_slug . '/wpml-config.xml';
 					if ( trim( $plugin_slug, '\/.' ) && file_exists( $config_file ) ) {
 						self::$wpml_config_files[ ] = $config_file;
 					}
@@ -143,7 +143,7 @@ class WPML_Config {
                 }
 
 				$plugin_slug = dirname( $p );
-				$config_file = WP_PLUGIN_DIR . '/' . $plugin_slug . '/wpml-config.xml';
+				$config_file = WPML_PLUGINS_DIR . '/' . $plugin_slug . '/wpml-config.xml';
 				if ( trim( $plugin_slug, '\/.' ) && file_exists( $config_file ) ) {
 					self::$wpml_config_files[ ] = $config_file;
 				}
@@ -194,7 +194,7 @@ class WPML_Config {
             $name = $plugin_info['Name'];
             $config_data = $config_index_file_data->plugins;
             $config_files_arr = $config_files_arr->plugins;
-            $config_file = WP_PLUGIN_DIR . '/' . $plugin_slug . '/wpml-config.xml';
+            $config_file = WPML_PLUGINS_DIR . '/' . $plugin_slug . '/wpml-config.xml';
             $type = 'plugin';
 
         }else{
@@ -374,6 +374,9 @@ class WPML_Config {
 			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'shortcode', 'shortcodes' );
 			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'gutenberg-block', 'gutenberg-blocks' );
 			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'key', 'custom-fields-texts' );
+			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'widget', 'elementor-widgets' );
+			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'widget', 'beaver-builder-widgets' );
+			$wpml_config_all = self::parse_config_index( $wpml_config_all, $wpml_config, 'widget', 'cornerstone-widgets' );
 
 			//language-switcher-settings
 			if ( isset( $wpml_config['language-switcher-settings']['key'] ) ) {

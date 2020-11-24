@@ -99,7 +99,7 @@ class WPML_Term_Query_Filter {
 		}
 
 		if ( ! empty( $args[ 'slug' ] ) ) {
-			$args['slug'] = $this->adjust_taxonomies_terms_slugs( $args[ 'slug' ], $taxonomies );
+			$args = $this->adjust_taxonomies_terms_slugs( $args, $taxonomies );
 		}
 
 		// special case for when term hierarchy is cached in wp_options
@@ -144,17 +144,19 @@ class WPML_Term_Query_Filter {
 	}
 
 	/**
-	 * @param string|array $terms_slugs
-	 * @param array        $taxonomies
+	 * @param array $args
+	 * @param array $taxonomies
 	 *
-	 * @return array|string
+	 * @return array
 	 */
-	private function adjust_taxonomies_terms_slugs( $terms_slugs, array $taxonomies ) {
+	private function adjust_taxonomies_terms_slugs( $args, array $taxonomies ) {
+		$terms_slugs = $args['slug'];
 		if ( is_string( $terms_slugs ) ) {
-			$terms_slugs = array( $terms_slugs );
+			$terms_slugs = [ $terms_slugs ];
 		}
 
-		$translated_slugs = array();
+		$duplicateSlugTranslations = [];
+		$translated_slugs = [];
 		foreach ( $terms_slugs as $terms_slug ) {
 			$term = $this->guess_term( $terms_slug, $taxonomies );
 
@@ -162,13 +164,23 @@ class WPML_Term_Query_Filter {
 				$translated_id   = $this->term_translation->term_id_in( $term->term_id, $this->current_language );
 				$translated_term = get_term( $translated_id, $term->taxonomy );
 				if ( $translated_term instanceof WP_Term ) {
+					if( $terms_slug === $translated_term->slug ) {
+						$duplicateSlugTranslations[] = $translated_id;
+					}
 					$terms_slug = $translated_term->slug;
 				}
 			}
 			$translated_slugs[] = $terms_slug;
 		}
 
-		return array_filter( $translated_slugs );
+		if ( count( $duplicateSlugTranslations ) === 1 ) {
+			$args['include'] = $duplicateSlugTranslations;
+			$args['slug'] = '';
+		} else {
+			$args['slug'] = array_filter( $translated_slugs );
+		}
+
+		return $args;
 	}
 
 	/**

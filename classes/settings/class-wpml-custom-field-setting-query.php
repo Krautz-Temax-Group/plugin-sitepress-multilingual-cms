@@ -74,11 +74,7 @@ class WPML_Custom_Field_Setting_Query {
 	 * @return string
 	 */
 	private function add_AND_search_condition( $search ) {
-		if ( $search ) {
-			return $this->wpdb->prepare( ' AND meta_key LIKE "%s"', '%' . $search . '%' );
-		}
-
-		return '';
+		return $search ? $this->wpdb->prepare( " AND meta_key LIKE '%s'", '%' . $search . '%' ) : '';
 	}
 
 	/**
@@ -87,11 +83,7 @@ class WPML_Custom_Field_Setting_Query {
 	 * @return string
 	 */
 	private function add_AND_system_fields_condition( $hide_system_fields ) {
-		if ( $hide_system_fields ) {
-			return ' AND meta_key NOT LIKE "\_%"';
-		}
-
-		return '';
+		return $hide_system_fields ? " AND meta_key NOT LIKE '\_%'" : '';
 	}
 
 	/**

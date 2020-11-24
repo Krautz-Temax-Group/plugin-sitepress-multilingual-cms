@@ -11,7 +11,7 @@ class WPML_Cookie {
 	 */
 	public function set_cookie( $name, $value, $expires, $path, $domain ) {
 		$this->handle_cache_plugins( $name );
-		setcookie( $name, $value, $expires, $path, $domain );
+		setcookie( $name, $value, $expires, $path, $domain, $this->is_secure_connection() );
 	}
 
 	/**
@@ -41,5 +41,17 @@ class WPML_Cookie {
 	private function handle_cache_plugins( $name ) {
 		// @todo uncomment or delete when #wpmlcore-5796 is resolved
 		//do_action( 'wpsc_add_cookie', $name );
+	}
+
+	private function is_secure_connection() {
+		if (
+			\WPML\FP\Obj::prop( 'HTTPS', $_SERVER ) === 'on' ||
+			\WPML\FP\Obj::prop( 'HTTP_X_FORWARDED_PROTO', $_SERVER ) === 'https' ||
+			\WPML\FP\Obj::prop( 'HTTP_X_FORWARDED_SSL', $_SERVER ) === 'on'
+		) {
+			return true;
+		}
+
+		return false;
 	}
 }

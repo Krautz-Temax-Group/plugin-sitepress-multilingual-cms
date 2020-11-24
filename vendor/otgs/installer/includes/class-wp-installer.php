@@ -2,6 +2,8 @@
 
 use OTGS\Installer\Collection;
 use OTGS\Installer\Rest\Push;
+use OTGS\Installer\Recommendations\RecommendationsManager;
+use OTGS\Installer\Recommendations\Storage;
 
 class WP_Installer {
 
@@ -53,6 +55,11 @@ class WP_Installer {
 	 * @var OTGS_Products_Manager
 	 */
 	private $products_manager;
+
+	/**
+	 * @var RecommendationsManager
+	 */
+	private $recommendations_manager;
 
 	public static function instance() {
 
@@ -162,6 +169,7 @@ class WP_Installer {
 		}
 
 		wp_enqueue_script( 'installer-dismiss-nag', $this->res_url() . '/res/js/dismiss-nag.js', array( 'jquery' ), $this->version(), true );
+		wp_enqueue_script( 'install-recommended_plugin', $this->res_url() . '/res/js/install_recommended_plugin.js', array( 'jquery' ), $this->version(), true );
 
 		$translation_array = array(
 			'installing' => __( 'Installing %s', 'installer' ),
@@ -206,6 +214,14 @@ class WP_Installer {
 				'plugin_upgrade_custom_errors'
 			), 0 ); // high priority, before WP
 		}
+
+		$repositories_factory          = new \OTGS_Installer_Repositories_Factory();
+		$this->recommendations_manager = new RecommendationsManager(
+			$repositories_factory->create( $this ),
+			$this->get_settings()['repositories'],
+			new Storage()
+		);
+		$this->recommendations_manager->addHooks();
 
 		//Include theme support
 		include_once $this->plugin_path() . '/includes/class-installer-theme.php';
@@ -871,10 +887,6 @@ class WP_Installer {
 					if ( isset( $this->config['repositories_exclude'] ) && in_array( $id, $this->config['repositories_exclude'] ) ) {
 						continue;
 					}
-					// includes rule;
-					if ( isset( $this->config['repositories_include'] ) && ! in_array( $id, $this->config['repositories_include'] ) ) {
-						continue;
-					}
 
 					$data['api-url']  = strval( $repo->apiurl );
 
@@ -931,12 +943,6 @@ class WP_Installer {
 				if ( isset( $this->config['repositories_exclude'] ) && in_array( $id, $this->config['repositories_exclude'] ) ) {
 					unset( $this->settings['repositories'][ $id ] );
 				}
-
-				// includes rule;
-				if ( isset( $this->config['repositories_include'] ) && ! in_array( $id, $this->config['repositories_include'] ) ) {
-					unset( $this->settings['repositories'][ $id ] );
-				}
-
 
 			}
 		}
@@ -999,8 +1005,12 @@ class WP_Installer {
 	 * @return int
 	 */
 	private function getLastSuccessSubscriptionFetch( $repositoryId ) {
-		if ( isset( $this->settings['repositories'][ $repositoryId ]['subscription_fetch_time'] ) ) {
-			return (int)$this->settings['repositories'][ $repositoryId ]['subscription_fetch_time'];
+		if ( defined( 'OTGS_INSTALLER_OVERRIDE_LAST_SUCCESS_SUBSCRIPTION_FETCH' ) ) {
+			return constant( 'OTGS_INSTALLER_OVERRIDE_LAST_SUCCESS_SUBSCRIPTION_FETCH' );
+		}
+
+		if ( isset( $this->settings['repositories'][ $repositoryId ]['last_successful_subscription_fetch'] ) ) {
+			return (int) $this->settings['repositories'][ $repositoryId ]['last_successful_subscription_fetch'];
 		} else {
 			return time();
 		}
@@ -1012,7 +1022,7 @@ class WP_Installer {
 	 * @return array
 	 */
 	private function setLastSuccessSubscriptionFetch( $repositoryId ) {
-		$this->settings['repositories'][ $repositoryId ]['subscription_fetch_time'] = time();
+		$this->settings['repositories'][ $repositoryId ]['last_successful_subscription_fetch'] = time();
 	}
 
     private function log_subscription_update( $message ) {
@@ -1021,6 +1031,15 @@ class WP_Installer {
         $log->set_response( $message );
         otgs_installer_get_logger_storage()->add($log);
     }
+
+	public function get_recommendations( $repository_id ) {
+		$subscription = $this->get_subscription( $repository_id );
+		if ( $subscription ) {
+			return $this->recommendations_manager->getRepositoryPluginsRecommendations();
+		}
+
+		return null;
+	}
 
 	public function refresh_repositories_data( $bypass_bucket = false ) {
 
@@ -2209,6 +2228,7 @@ class WP_Installer {
 				$plugins = get_plugins();
 
 				//upgrade or install?
+				$is_embedded = false;
 				foreach ( $plugins as $id => $plugin ) {
 					$wp_plugin_slug = dirname( $id );
 					$is_embedded    = $this->plugin_is_embedded_version( preg_replace( '/ Embedded$/', '', $plugin['Name'] ), preg_replace( '/-embedded$/', '', $wp_plugin_slug ) );
@@ -2219,12 +2239,12 @@ class WP_Installer {
 					}
 				}
 
-				if ( $plugin_id && empty( $is_embedded ) ) { //upgrade
+				if ( $plugin_id && ! $is_embedded && $this->is_plugin_out_of_date( $plugin_id ) ) { //upgrade
 					$response['upgrade'] = 1;
 
 					$plugin_is_active = is_plugin_active( $plugin_id );
 
-					$ret = $upgrader->upgrade( $plugin_id );
+					$ret = $upgrader->upgrade( $plugin_id, [ 'clear_update_cache' => false ] );
 
 					if ( ! $ret && ! empty( $upgrader->skin->installer_error ) ) {
 						if ( is_wp_error( $upgrader->skin->installer_error ) ) {
@@ -2240,8 +2260,10 @@ class WP_Installer {
 						}
 						$plugin_version = $this->get_plugin_repository_version( $data['repository_id'], $data['slug'] );
                     }
-
-				} else { //install
+            } elseif ( $plugin_id && ! $is_embedded ) { // activate
+                activate_plugin( $plugin_id );
+                $ret = true;
+			} else { //install
 
 					if ( $is_embedded ) {
 						delete_plugins( array( $plugin_id ) );
@@ -2302,6 +2324,12 @@ class WP_Installer {
 
 	}
 
+	private function is_plugin_out_of_date( $plugin ) {
+		$current = get_site_transient( 'update_plugins' );
+
+		return isset( $current->response[ $plugin ] );
+	}
+
 	public function download_plugin( $slug, $url ) {
 
 		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
@@ -2344,7 +2372,6 @@ class WP_Installer {
 	}
 
 	public function activate_plugin() {
-
 		$error = '';
 
 		$plugin_id = sanitize_text_field( $_POST['plugin_id'] );
@@ -2385,6 +2412,10 @@ class WP_Installer {
 	public function custom_plugins_api_call( $result, $action, $args ) {
 
 		if ( $action == 'plugin_information' ) {
+
+			if ( ! function_exists( 'get_plugins' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			}
 
 			$plugins      = get_plugins();
 			$installed_plugins = array();

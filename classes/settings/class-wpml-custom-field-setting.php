@@ -1,5 +1,7 @@
 <?php
 
+use WPML\FP\Logic;
+
 abstract class WPML_Custom_Field_Setting extends WPML_TM_User {
 
 	/** @var  string $index */
@@ -79,11 +81,11 @@ abstract class WPML_Custom_Field_Setting extends WPML_TM_User {
 	public function set_to_nothing() {
 		$this->set_state( WPML_IGNORE_CUSTOM_FIELD );
 	}
-	
+
 	public function set_editor_style( $style ) {
 		$this->tm_instance->settings[ $this->get_array_setting_index( 'editor_style' ) ][ $this->index ] = $style;
 	}
-	
+
 	public function get_editor_style() {
 		$setting = $this->get_array_setting_index( 'editor_style' );
 		return isset( $this->tm_instance->settings[ $setting ][ $this->index ] ) ? $this->tm_instance->settings[ $setting ][ $this->index ] : '';
@@ -115,7 +117,7 @@ abstract class WPML_Custom_Field_Setting extends WPML_TM_User {
 		}
 		$this->tm_instance->settings[ $this->get_array_setting_index( 'translate_link_target' ) ][ $this->index ] = array( 'state' => $state, 'sub_fields' => $sub_fields );
 	}
-	
+
 	public function is_translate_link_target() {
 		$array_index = $this->get_array_setting_index( 'translate_link_target' );
 		return isset( $this->tm_instance->settings[ $array_index ][ $this->index ] ) ?
@@ -144,7 +146,11 @@ abstract class WPML_Custom_Field_Setting extends WPML_TM_User {
 	}
 
 	public function set_encoding( $encoding ) {
-		$this->tm_instance->settings[ $this->get_array_setting_index( 'encoding' ) ][ $this->index ] = $encoding;
+		if ( Logic::isNotNull( $encoding ) ) {
+			$this->tm_instance->settings[ $this->get_array_setting_index( 'encoding' ) ][ $this->index ] = $encoding;
+		} else {
+			unset( $this->tm_instance->settings[ $this->get_array_setting_index( 'encoding' ) ][ $this->index ] );
+		}
 	}
 
 	public function get_encoding() {
@@ -184,7 +190,7 @@ abstract class WPML_Custom_Field_Setting extends WPML_TM_User {
 	protected abstract function get_state_array_setting_index();
 
 	protected abstract function get_unlocked_setting_index();
-	
+
 	/**
 	 * @return  string[]
 	 */

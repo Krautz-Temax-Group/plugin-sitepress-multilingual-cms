@@ -78,29 +78,8 @@ class WPML_Absolute_Url_Persisted {
 		return null;
 	}
 
-	/** @param string $url */
-	public function delete( $url ) {
-		if ( array_key_exists( $url, $this->get_urls() ) ) {
-			unset( $this->urls[ $url ] );
-		}
-
-		foreach ( $this->urls as $original_url => $urls_per_lang ) {
-			$lang = array_search( $url, $urls_per_lang, true );
-
-			if ( $lang ) {
-				unset( $this->urls[ $original_url ][ $lang ] );
-
-				if ( empty( $this->urls[ $original_url ] ) ) {
-					unset( $this->urls[ $original_url ] );
-				}
-			}
-		}
-
-		$this->persist_in_shutdown();
-	}
-
 	public function reset() {
-		$this->urls = array();
+		$this->urls = [];
 		$this->persist();
 		$this->urls = null;
 	}
